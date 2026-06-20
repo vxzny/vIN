@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>For Her — Among the Stars</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Italiana&family=Jost:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,500;1,600;1,700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --deep-space:#1A0933;
+    --royal-violet:#4B1D7A;
+    --amethyst:#7E57C2;
+    --lavender:#B388FF;
+    --moonlight:#EDE7F6;
+    --glass-border: rgba(179,136,255,0.25);
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  html{ scroll-behavior:smooth; }
+
+  body{
+    background: radial-gradient(ellipse at 50% 0%, #2a1248 0%, var(--deep-space) 55%, #100619 100%);
+    color: var(--moonlight);
+    font-family:'Jost', sans-serif;
+    font-weight:300;
+    overflow-x:hidden;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  ::selection{ background: var(--amethyst); color: var(--moonlight); }
+
+  ::-webkit-scrollbar{ width:8px; }
+  ::-webkit-scrollbar-track{ background: var(--deep-space); }
+  ::-webkit-scrollbar-thumb{ background: linear-gradient(var(--amethyst), var(--royal-violet)); border-radius:10px; }
+
+  a, button{ font-family:inherit; }
+
+  :focus-visible{ outline:2px solid var(--lavender); outline-offset:4px; border-radius:4px; }
+
+  /* ---------- background layers ---------- */
+  .bg-fixed{ position:fixed; inset:0; pointer-events:none; }
+  #starfield{ z-index:-2; }
+  .nebula-layer{ z-index:-4; overflow:hidden; }
+
+  .nebula-blob{
+    position:absolute;
+    border-radius:50%;
+    filter: blur(70px);
+    mix-blend-mode:screen;
+    opacity:0.55;
+    will-change:transform;
+  }
+  .b1{ width:60vw; height:60vw; top:-15vw; left:-10vw; background:radial-gradient(circle, var(--royal-violet), transparent 70%); animation:drift1 38s ease-in-out infinite alternate; }
+  .b2{ width:50vw; height:50vw; bottom:-10vw; right:-15vw; background:radial-gradient(circle, var(--amethyst), transparent 70%); animation:drift2 46s ease-in-out infinite alternate; }
+  .b3{ width:40vw; height:40vw; top:30%; left:55%; background:radial-gradient(circle, var(--lavender), transparent 70%); opacity:0.35; animation:drift3 52s ease-in-out infinite alternate; }
+  .b4{ width:35vw; height:35vw; top:60%; left:5%; background:radial-gradient(circle, var(--royal-violet), transparent 70%); opacity:0.4; animation:drift1 60s ease-in-out infinite alternate-reverse; }
+
+  @keyframes drift1{ 0%{ transform:translate(0,0) scale(1);} 100%{ transform:translate(6vw,8vw) scale(1.15);} }
+  @keyframes drift2{ 0%{ transform:translate(0,0) scale(1);} 100%{ transform:translate(-7vw,-5vw) scale(1.1);} }
+  @keyframes drift3{ 0%{ transform:translate(0,0) scale(1);} 100%{ transform:translate(-4vw,6vw) scale(1.2);} }
+
+  .aurora{
+    position:absolute; top:-20%; left:-10%; width:120%; height:60%;
+    background: conic-gradient(from 90deg at 50% 50%, transparent 0deg, rgba(179,136,255,0.25) 60deg, transparent 140deg, rgba(126,87,194,0.2) 220deg, transparent 320deg);
+    filter: blur(60px);
+    opacity:0.5;
+    animation: auroraSpin 90s linear infinite;
+    mix-blend-mode:screen;
+  }
+  @keyframes auroraSpin{ from{ transform:rotate(0deg);} to{ transform:rotate(360deg);} }
+
+  /* ---------- shared utility ---------- */
+  .eyebrow{
+    font-family:'Italiana', serif;
+    text-transform:uppercase;
+    letter-spacing:0.35em;
+    font-size:0.7rem;
+    color: var(--lavender);
+    opacity:0.85;
+  }
+
+  .glow-text{ text-shadow:0 0 10px rgba(179,136,255,0.85), 0 0 30px rgba(126,87,194,0.55); }
+
+  .glass-card{
+    background: linear-gradient(135deg, rgba(126,87,194,0.16), rgba(75,29,122,0.08));
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    border:1px solid var(--glass-border);
+    border-radius:24px;
+    box-shadow:0 8px 40px rgba(10,4,20,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+
+  section{ position:relative; padding:8rem 6vw; max-width:1280px; margin:0 auto; }
+  @media (max-width:700px){ section{ padding:6rem 6vw; } }
+
+  h2.section-title{
+    font-family:'Playfair Display', serif;
+    font-style:italic;
+    font-weight:600;
+    font-size:clamp(2rem, 5vw, 3.4rem);
+    margin:0.6rem 0 1.6rem;
+    color: var(--moonlight);
+  }
+
+  p.lede{
+    font-size:clamp(1rem, 1.6vw, 1.2rem);
+    line-height:1.9;
+    color: rgba(237,231,246,0.85);
+    max-width:62ch;
+    font-weight:300;
+  }
+
+  .reveal{ opacity:0; transform:translateY(36px); transition:opacity 1s ease, transform 1s ease; }
+  .reveal.in-view{ opacity:1; transform:translateY(0); }
+
+  /* ---------- moon ---------- */
+  .moon{
+    position:relative;
+    border-radius:50%;
+    background: radial-gradient(circle at 34% 30%, #ffffff 0%, #EDE7F6 16%, #cdb9ef 36%, #9c7cd2 58%, #6c4bab 78%, var(--royal-violet) 100%);
+    box-shadow:
+      0 0 60px 16px rgba(179,136,255,0.45),
+      0 0 160px 70px rgba(75,29,122,0.32),
+      inset -22px -16px 40px rgba(26,9,51,0.55);
+    flex-shrink:0;
+  }
+  .moon .crater{
+    position:absolute;
+    border-radius:50%;
+    background: radial-gradient(circle, rgba(75,29,122,0.35), transparent 70%);
+    filter: blur(1px);
+  }
+
+  /* ---------- nav dots ---------- */
+  .side-nav{
+    position:fixed; right:2.2rem; top:50%; transform:translateY(-50%);
+    z-index:30; display:flex; flex-direction:column; gap:1.3rem;
+  }
+  .side-nav a{
+    display:flex; align-items:center; gap:0.7rem; text-decoration:none;
+    color: rgba(237,231,246,0.55); font-family:'Italiana', serif; font-size:0.65rem; letter-spacing:0.2em;
+    opacity:0.6; transition:opacity .4s ease;
+  }
+  .side-nav a .dot{
+    width:8px; height:8px; border-radius:50%; background: rgba(237,231,246,0.35);
+    box-shadow:0 0 0 0 rgba(179,136,255,0); transition:all .4s ease;
+  }
+  .side-nav a .label{ max-width:0; overflow:hidden; white-space:nowrap; transition:max-width .4s ease; }
+  .side-nav a:hover .label, .side-nav a.active .label{ max-width:140px; }
+  .side-nav a:hover, .side-nav a.active{ opacity:1; color: var(--moonlight); }
+  .side-nav a.active .dot{ background: var(--lavender); box-shadow:0 0 14px 3px rgba(179,136,255,0.85); }
+  @media (max-width:900px){ .side-nav{ display:none; } }
+
+  /* ---------- hero ---------- */
+  #hero{
+    min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding-top:4rem; padding-bottom:4rem; max-width:none;
+  }
+  #hero .moon{ position:absolute; width:clamp(220px,38vw,460px); height:clamp(220px,38vw,460px); top:8%; left:50%; transform:translateX(-50%); opacity:0.9; z-index:0; }
+  #hero .hero-inner{ position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; }
+
+  #nameCanvas{ width:min(92vw, 680px); height:clamp(150px,24vw,260px); display:block; }
+
+  .tagline{
+    font-family:'Playfair Display', serif; font-style:italic; font-weight:400;
+    font-size:clamp(1rem, 2vw, 1.35rem);
+    color: rgba(237,231,246,0.85);
+    margin-top:0.6rem;
+    letter-spacing:0.02em;
+  }
+
+  .special-line{
+    margin-top:3rem;
+    font-family:'Playfair Display', serif; font-style:italic; font-weight:500;
+    font-size:clamp(1.2rem, 2.6vw, 1.9rem);
+    max-width:18ch;
+    line-height:1.5;
+    color: var(--moonlight);
+  }
+
+  .scroll-cue{
+    position:absolute; bottom:2.6rem; left:50%; transform:translateX(-50%);
+    display:flex; flex-direction:column; align-items:center; gap:0.5rem;
+    font-family:'Italiana', serif; letter-spacing:0.3em; font-size:0.65rem; text-transform:uppercase;
+    color: rgba(237,231,246,0.55); z-index:1;
+  }
+  .scroll-cue .chevron{ width:1px; height:34px; background:linear-gradient(var(--lavender), transparent); animation:bob 2.2s ease-in-out infinite; }
+  @keyframes bob{ 0%,100%{ transform:translateY(0); opacity:0.4;} 50%{ transform:translateY(10px); opacity:1;} }
+
+  /* ---------- moon section ---------- */
+  #moon{ display:flex; align-items:center; gap:5vw; flex-wrap:wrap; }
+  #moon .moon-visual{ flex:1 1 280px; display:flex; justify-content:center; }
+  #moon .moon{ width:clamp(180px,22vw,300px); height:clamp(180px,22vw,300px); }
+  #moon .moon-text{ flex:1 1 360px; }
+  #moon .moon-text .glass-card{ padding:2.6rem clamp(1.6rem,3vw,3rem); }
+
+  /* ---------- nebula gallery ---------- */
+  .nebula-grid{
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:1.6rem; margin-top:2.5rem;
+  }
+  .nebula-card{
+    aspect-ratio:4/5; border-radius:20px; overflow:hidden; position:relative;
+    border:1px solid var(--glass-border);
+    box-shadow:0 10px 40px rgba(10,4,20,0.5);
+    transition:transform .5s ease, box-shadow .5s ease;
+  }
+  .nebula-card:hover{ transform:translateY(-8px) scale(1.02); box-shadow:0 18px 50px rgba(126,87,194,0.45); }
+  .nebula-card .photo-bg{
+    position:absolute; inset:0;
+    /* Decorative nebula gradient backdrop for each cosmic motif card */
+    background-image:
+      radial-gradient(circle at 30% 20%, rgba(179,136,255,0.55), transparent 55%),
+      radial-gradient(circle at 75% 70%, rgba(75,29,122,0.7), transparent 60%),
+      linear-gradient(160deg, var(--n1,#3a1a64), var(--n2,#1A0933));
+  }
+  .nebula-card .photo-bg::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(to bottom, rgba(10,4,20,0.15), rgba(10,4,20,0.55));
+    z-index:1;
+  }
+
+  .nebula-card .photo-bg::after{
+    content:""; position:absolute; inset:0;
+    background-image:radial-gradient(white 0.6px, transparent 0.6px);
+    background-size:18px 18px; opacity:0.25; mix-blend-mode:screen;
+  }
+  .nebula-card .card-label{
+    position:absolute;
+    top:1rem;
+    left:1rem;
+    font-family:'Italiana', serif;
+    text-transform:uppercase;
+    letter-spacing:0.3em;
+    font-size:0.95rem;
+    font-weight:700;
+    color:#ffffff;
+    background:rgba(10,4,20,0.55);
+    backdrop-filter:blur(8px);
+    padding:10px 14px;
+    border-radius:12px;
+    text-shadow:0 0 10px rgba(255,255,255,0.8),0 0 25px rgba(179,136,255,0.9);
+    border:1px solid rgba(255,255,255,0.15);
+    z-index:3;
+  }
+  .nebula-card .caption{
+    position:absolute; left:0; right:0; bottom:0; padding:2.4rem 1.2rem 1.3rem;
+    background:linear-gradient(to top, rgba(10,4,20,0.92) 0%, rgba(10,4,20,0.78) 40%, transparent 100%);
+    font-family:'Playfair Display', serif; font-style:italic; font-size:0.92rem; line-height:1.55;
+    color: var(--moonlight);
+  }
+
+  /* ---------- constellation ---------- */
+  #constellation .const-wrap{ margin-top:3rem; }
+  #constellation svg{ width:100%; height:auto; overflow:visible; }
+  .star-node{ fill:var(--moonlight); filter:drop-shadow(0 0 4px rgba(179,136,255,0.9)); transition:r .35s ease, filter .35s ease; cursor:pointer; }
+  .star-node.active{ filter:drop-shadow(0 0 14px rgba(179,136,255,1)); }
+  .const-line{
+    stroke: rgba(179,136,255,0.35); stroke-width:1.4; fill:none;
+    stroke-dasharray:1000; stroke-dashoffset:1000;
+    transition:stroke 0.4s ease, stroke-width 0.4s ease;
+  }
+  .const-line.drawn{ transition:stroke-dashoffset 2.4s ease; stroke-dashoffset:0; }
+  .const-line.active{ stroke:rgba(179,136,255,0.95); stroke-width:2.2; }
+
+  .memory-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(190px,1fr)); gap:1.2rem; margin-top:2.5rem; }
+  .memory-card{
+    padding:1.5rem 1.3rem; border-radius:18px; opacity:0.55; transform:scale(0.98);
+    transition:opacity .35s ease, transform .35s ease, box-shadow .35s ease;
+  }
+  .memory-card.active{ opacity:1; transform:scale(1); box-shadow:0 14px 40px rgba(126,87,194,0.4); }
+  .memory-card .m-date{ font-family:'Italiana', serif; letter-spacing:0.2em; font-size:0.62rem; color:var(--lavender); text-transform:uppercase; }
+  .memory-card .m-title{ font-family:'Playfair Display', serif; font-style:italic; font-size:1.15rem; margin:0.4rem 0 0.5rem; }
+  .memory-card .m-text{ font-size:0.85rem; line-height:1.6; color:rgba(237,231,246,0.78); }
+
+  /* ---------- wishes ---------- */
+  .wish-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(240px,1fr)); gap:1.4rem; margin-top:2.5rem; }
+  .wish-card{ padding:1.8rem 1.6rem; display:flex; gap:1rem; align-items:flex-start; }
+  .wish-card .star-icon{ font-size:1.1rem; color:var(--lavender); text-shadow:0 0 10px rgba(179,136,255,0.9); flex-shrink:0; margin-top:0.15rem; }
+  .wish-card p{ font-family:'Playfair Display', serif; font-style:italic; font-size:1.02rem; line-height:1.6; color:rgba(237,231,246,0.92); }
+
+  /* ---------- universe closing ---------- */
+  #universe{ text-align:center; min-height:90vh; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  #universe .moon{ width:clamp(140px,16vw,220px); height:clamp(140px,16vw,220px); margin-bottom:2.4rem; }
+  #universe .closing-quote{
+    font-family:'Playfair Display', serif; font-style:italic; font-weight:500;
+    font-size:clamp(1.4rem, 3.4vw, 2.6rem); max-width:20ch; line-height:1.5; margin-bottom:1.4rem;
+  }
+  #universe .closing-sub{ font-size:1rem; color:rgba(237,231,246,0.7); letter-spacing:0.04em; }
+  #universe .signature{
+    margin-top:2.6rem; font-family:'Playfair Display', serif; font-style:italic; font-weight:400;
+    font-size:1rem; line-height:1.8; color: rgba(237,231,246,0.78); max-width:26ch;
+  }
+  #universe .signature .sig-name{
+    display:block; margin-top:0.6rem; font-family:'Italiana', serif; font-style:normal;
+    letter-spacing:0.3em; text-transform:uppercase; font-size:0.78rem; color: var(--lavender);
+    text-shadow:0 0 10px rgba(179,136,255,0.7);
+  }
+
+  footer{ text-align:center; padding:3rem 1rem 4rem; font-family:'Italiana', serif; letter-spacing:0.25em; font-size:0.7rem; text-transform:uppercase; color:rgba(237,231,246,0.45); }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; scroll-behavior:auto !important; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="bg-fixed nebula-layer">
+    <div class="nebula-blob b1"></div>
+    <div class="nebula-blob b2"></div>
+    <div class="nebula-blob b3"></div>
+    <div class="nebula-blob b4"></div>
+    <div class="aurora"></div>
+  </div>
+  <canvas id="starfield" class="bg-fixed"></canvas>
+
+  <nav class="side-nav" aria-label="Section navigation">
+    <a href="#moon" data-section="moon"><span class="dot"></span><span class="label">I — The Moon</span></a>
+    <a href="#nebula" data-section="nebula"><span class="dot"></span><span class="label">II — Purple Nebula</span></a>
+    <a href="#constellation" data-section="constellation"><span class="dot"></span><span class="label">III — Constellation Memories</span></a>
+    <a href="#wishes" data-section="wishes"><span class="dot"></span><span class="label">IV — Starry Wishes</span></a>
+    <a href="#universe" data-section="universe"><span class="dot"></span><span class="label">V — Infinite Universe</span></a>
+  </nav>
+
+  <main>
+
+    <!-- HERO -->
+    <section id="hero">
+      <div class="moon" aria-hidden="true">
+        <span class="crater" style="width:18%; height:18%; top:22%; left:28%;"></span>
+        <span class="crater" style="width:10%; height:10%; top:55%; left:60%;"></span>
+        <span class="crater" style="width:7%; height:7%; top:38%; left:65%;"></span>
+        <span class="crater" style="width:13%; height:13%; top:68%; left:30%;"></span>
+      </div>
+      <div class="hero-inner">
+        <p class="eyebrow">a quiet corner of the cosmos, for</p>
+        <canvas id="nameCanvas" role="img" aria-label="You shine without trying."></canvas>
+        <p class="tagline">Like a violet star shining softly among the infinite universe.</p>
+        <p class="special-line glow-text">Among billions of stars, my eyes still find their way to YOU.</p>
+      </div>
+      <div class="scroll-cue"><span>scroll the sky</span><span class="chevron"></span></div>
+    </section>
+
+    <!-- I. THE MOON -->
+    <section id="moon">
+      <div class="moon-visual reveal">
+        <div class="moon">
+          <span class="crater" style="width:16%; height:16%; top:20%; left:25%;"></span>
+          <span class="crater" style="width:9%; height:9%; top:58%; left:62%;"></span>
+          <span class="crater" style="width:12%; height:12%; top:65%; left:28%;"></span>
+        </div>
+      </div>
+      <div class="moon-text reveal">
+        <p class="eyebrow">I — the moon</p>
+        <h2 class="section-title">A calm that needs no audience</h2>
+        <div class="glass-card">
+          <p class="lede">Every night, the moon rises without asking to be noticed, and yet the whole sky softens around it. It never rushes. It never dims itself to fit in, and it never needs to shout to be seen. You carry that same quiet light — steady, gentle, and luminous in your own unhurried way. Some people fill a room with noise; you fill it with calm, the way moonlight fills a window without ever breaking the silence.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- II. PURPLE NEBULA -->
+    <section id="nebula">
+      <p class="eyebrow reveal">II — purple nebula</p>
+      <h2 class="section-title reveal">A universe that looks a little like you</h2>
+      <p class="lede reveal">Stars, nebulae, moons, galaxies — the universe has its own quiet language. Somehow, every part of it keeps describing you.</p>
+      <div class="nebula-grid">
+        <div class="nebula-card reveal" style="--n1:#4B1D7A; --n2:#1A0933;">
+          <div class="photo-bg" style="background-image:url('https://images.unsplash.com/photo-1462331940025-496dfbfc7564');background-size:cover;background-position:center;"></div>
+          <p class="card-label">✦ Stars</p>
+          <p class="caption">Scattered across the dark, yet each one finds its own quiet way to shine. So do you.</p>
+        </div>
+        <div class="nebula-card reveal" style="--n1:#7E57C2; --n2:#2a1248;">
+          <div class="photo-bg" style="background-image:url('https://images.unsplash.com/photo-1419242902214-272b3f66ee7a');background-size:cover;background-position:center;"></div>
+          <p class="card-label">✦ Nebula</p>
+          <p class="caption">Clouds of dust and violet light, slowly becoming something beautiful. Softness, turning into wonder — just like you.</p>
+        </div>
+        <div class="nebula-card reveal" style="--n1:#5b2a9e; --n2:#150726;">
+          <div class="photo-bg" style="background-image:url('https://images.unsplash.com/photo-1532693322450-2cb5c511067d');background-size:cover;background-position:center;"></div>
+          <p class="card-label">☾ Moon</p>
+          <p class="caption">Calm, steady, never needing to be loud to be noticed. A quiet kind of beautiful, lighting up the dark without trying.</p>
+        </div>
+        <div class="nebula-card reveal" style="--n1:#3a1a64; --n2:#1A0933;">
+          <div class="photo-bg" style="background-image:url('https://images.unsplash.com/photo-1465101046530-73398c7f28ca');background-size:cover;background-position:center;"></div>
+          <p class="card-label">✧ Galaxy</p>
+          <p class="caption">A hundred billion stars, held together by something unseen. Maybe that's what it feels like, being close to you.</p>
+        </div>
+        <div class="nebula-card reveal" style="--n1:#6c3fb5; --n2:#1d0c38;">
+          <div class="photo-bg" style="background-image:url('https://images.unsplash.com/photo-1502134249126-9f3755a50d78');background-size:cover;background-position:center;"></div>
+          <p class="card-label">✦ Universe</p>
+          <p class="caption">Endless, unmeasured, still expanding. Some things — like how much you mean to me — only keep growing.</p>
+        </div>
+        <div class="nebula-card reveal" style="--n1:#8a63d6; --n2:#221040;">
+          <div class="photo-bg" style="background-image:url('https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1200&q=80');background-size:cover;background-position:center;"></div>
+          <p class="card-label">✧ Stardust</p>
+          <p class="caption">Every atom in you was once part of a star. You were made of light long before I ever found you.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- III. CONSTELLATION MEMORIES -->
+    <section id="constellation">
+      <p class="eyebrow reveal">III — constellation memories</p>
+      <h2 class="section-title reveal">A timeline written in starlight</h2>
+      <p class="lede reveal">Move your cursor near a star to bring its memory into focus.</p>
+
+      <div class="const-wrap reveal">
+        <svg viewBox="0 0 1000 300" preserveAspectRatio="xMidYMid meet" id="constSvg">
+          <line class="const-line" data-pair="0-1" x1="60" y1="170" x2="280" y2="90"></line>
+          <line class="const-line" data-pair="1-2" x1="280" y1="90" x2="500" y2="210"></line>
+          <line class="const-line" data-pair="2-3" x1="500" y1="210" x2="730" y2="70"></line>
+          <line class="const-line" data-pair="3-4" x1="730" y1="70" x2="940" y2="180"></line>
+
+          <circle class="star-node" data-index="0" cx="60" cy="170" r="6"></circle>
+          <circle class="star-node" data-index="1" cx="280" cy="90" r="6"></circle>
+          <circle class="star-node" data-index="2" cx="500" cy="210" r="6"></circle>
+          <circle class="star-node" data-index="3" cx="730" cy="70" r="6"></circle>
+          <circle class="star-node" data-index="4" cx="940" cy="180" r="6"></circle>
+        </svg>
+      </div>
+
+      <div class="memory-grid">
+        <div class="memory-card glass-card" data-index="0">
+          <p class="m-date">Chapter One</p>
+          <p class="m-title">Where it began</p>
+          <p class="m-text">The first time our stars crossed paths in this vast universe.</p>
+        </div>
+        <div class="memory-card glass-card" data-index="1">
+          <p class="m-date">Chapter Two</p>
+          <p class="m-title">A laugh I still hear</p>
+          <p class="m-text">A moment so light it still makes the corners of my mouth lift.</p>
+        </div>
+        <div class="memory-card glass-card" data-index="2">
+          <p class="m-date">Chapter Three</p>
+          <p class="m-title">Quiet, just us</p>
+          <p class="m-text">No noise, no rush — just two people and a comfortable silence.</p>
+        </div>
+        <div class="memory-card glass-card" data-index="3">
+          <p class="m-date">Chapter Four</p>
+          <p class="m-title">Under the moon</p>
+          <p class="m-text">A promise made somewhere quiet, with the sky as the only witness.</p>
+        </div>
+        <div class="memory-card glass-card" data-index="4">
+          <p class="m-date">Chapter Five</p>
+          <p class="m-title">Today, and onward</p>
+          <p class="m-text">The next chapter, still being written, one starlit day at a time.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- IV. STARRY WISHES -->
+    <section id="wishes">
+      <p class="eyebrow reveal">IV — starry wishes</p>
+      <h2 class="section-title reveal">Every wish, sent upward</h2>
+      <div class="wish-grid">
+        <div class="wish-card glass-card reveal"><span class="star-icon">✦</span><p>May every sunrise find you gentle and unburdened.</p></div>
+        <div class="wish-card glass-card reveal"><span class="star-icon">✦</span><p>May your dreams grow as vast as the galaxies above.</p></div>
+        <div class="wish-card glass-card reveal"><span class="star-icon">✦</span><p>May you always know how deeply you are cherished.</p></div>
+        <div class="wish-card glass-card reveal"><span class="star-icon">✦</span><p>May calm follow you the way moonlight follows the night.</p></div>
+        <div class="wish-card glass-card reveal"><span class="star-icon">✦</span><p>May your laughter echo louder than any falling star.</p></div>
+        <div class="wish-card glass-card reveal"><span class="star-icon">✦</span><p>May you be loved exactly as softly as you love others.</p></div>
+      </div>
+    </section>
+
+    <!-- V. INFINITE UNIVERSE -->
+    <section id="universe">
+      <div class="moon" aria-hidden="true">
+        <span class="crater" style="width:16%; height:16%; top:25%; left:30%;"></span>
+        <span class="crater" style="width:9%; height:9%; top:60%; left:60%;"></span>
+      </div>
+      <p class="eyebrow reveal">V — infinite universe</p>
+      <p class="closing-quote glow-text reveal">Among billions of stars scattered across an endless universe, none of them shine quite like you.</p>
+      <p class="closing-sub reveal">Thank you for being my favourite star.</p>
+      <p class="signature reveal">From me — the one who sees stars in your eyes every day.<span class="sig-name">— vIN</span></p>
+    </section>
+
+  </main>
+
+  <footer>✦ crafted softly, among the stars, for her ✦</footer>
+
+<script>
+(function(){
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ===================== STARFIELD + SHOOTING STARS + MOUSE DUST ===================== */
+  const starCanvas = document.getElementById('starfield');
+  const sctx = starCanvas.getContext('2d');
+  let sw, sh, bgStars = [], shootingStars = [], dust = [];
+  let mouseX = window.innerWidth/2, mouseY = window.innerHeight/2;
+
+  function resizeStarCanvas(){
+    sw = window.innerWidth; sh = window.innerHeight;
+    starCanvas.width = sw; starCanvas.height = sh;
+  }
+
+  function initStars(){
+    const count = Math.min(220, Math.max(60, Math.floor((sw*sh)/7000)));
+    bgStars = Array.from({length: count}).map(() => ({
+      x: Math.random()*sw,
+      y: Math.random()*sh,
+      r: Math.random()*1.4 + 0.3,
+      baseAlpha: Math.random()*0.5 + 0.3,
+      phase: Math.random()*Math.PI*2,
+      speed: Math.random()*0.3 + 0.08
+    }));
+  }
+
+  function spawnShootingStar(){
+    shootingStars.push({
+      x: Math.random()*sw*0.7 + sw*0.15,
+      y: Math.random()*sh*0.25,
+      vx: -(Math.random()*6 + 7),
+      vy: (Math.random()*3 + 3.5),
+      life: 0,
+      maxLife: 55 + Math.random()*25,
+      len: Math.random()*70 + 50
+    });
+  }
+
+  function drawFrame(ts){
+    sctx.clearRect(0,0,sw,sh);
+
+    const parX = (mouseX/sw - 0.5) * 24;
+    const parY = (mouseY/sh - 0.5) * 24;
+
+    bgStars.forEach(s => {
+      const tw = s.baseAlpha + Math.sin((ts/1000)*s.speed*4 + s.phase) * 0.25;
+      sctx.beginPath();
+      sctx.fillStyle = `rgba(237,231,246,${Math.max(0, Math.min(1, tw))})`;
+      sctx.shadowColor = 'rgba(179,136,255,0.7)';
+      sctx.shadowBlur = s.r > 1 ? 5 : 0;
+      sctx.arc(s.x + parX, s.y + parY, s.r, 0, Math.PI*2);
+      sctx.fill();
+    });
+
+    sctx.shadowBlur = 0;
+
+    if(!reduceMotion){
+      shootingStars.forEach(s => {
+        s.life++;
+        s.x += s.vx; s.y += s.vy;
+        const alpha = Math.max(0, 1 - s.life/s.maxLife);
+        const mag = Math.hypot(s.vx, s.vy) || 1;
+        const tailX = s.x - (s.vx/mag) * s.len;
+        const tailY = s.y - (s.vy/mag) * s.len;
+        const grad = sctx.createLinearGradient(s.x, s.y, tailX, tailY);
+        grad.addColorStop(0, `rgba(237,231,246,${alpha})`);
+        grad.addColorStop(1, 'rgba(237,231,246,0)');
+        sctx.strokeStyle = grad;
+        sctx.lineWidth = 2;
+        sctx.beginPath();
+        sctx.moveTo(s.x, s.y);
+        sctx.lineTo(tailX, tailY);
+        sctx.stroke();
+      });
+      shootingStars = shootingStars.filter(s => s.life < s.maxLife);
+
+      dust.forEach(d => {
+        d.life++;
+        d.x += d.vx; d.y += d.vy;
+        const alpha = Math.max(0, (1 - d.life/d.maxLife) * 0.7);
+        sctx.beginPath();
+        sctx.fillStyle = `rgba(179,136,255,${alpha})`;
+        sctx.shadowColor = 'rgba(179,136,255,0.9)';
+        sctx.shadowBlur = 4;
+        sctx.arc(d.x, d.y, d.r, 0, Math.PI*2);
+        sctx.fill();
+      });
+      sctx.shadowBlur = 0;
+      dust = dust.filter(d => d.life < d.maxLife);
+    }
+
+    requestAnimationFrame(drawFrame);
+  }
+
+  resizeStarCanvas();
+  initStars();
+  requestAnimationFrame(drawFrame);
+
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => { resizeStarCanvas(); initStars(); }, 250);
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX; mouseY = e.clientY;
+    if(!reduceMotion && dust.length < 140 && Math.random() < 0.55){
+      dust.push({
+        x: e.clientX + (Math.random()-0.5)*12,
+        y: e.clientY + (Math.random()-0.5)*12,
+        vx: (Math.random()-0.5)*0.4,
+        vy: -(Math.random()*0.5 + 0.2),
+        life: 0,
+        maxLife: 60 + Math.random()*40,
+        r: Math.random()*1.5 + 0.5
+      });
+    }
+  }, { passive:true });
+
+  if(!reduceMotion){
+    setInterval(() => { if(Math.random() < 0.75) spawnShootingStar(); }, 3200);
+  }
+
+  /* ===================== NAME FORMED FROM STARLIGHT ===================== */
+  function initNameCanvas(){
+    const canvas = document.getElementById('nameCanvas');
+    const ctx = canvas.getContext('2d');
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const cssW = canvas.clientWidth;
+    const cssH = canvas.clientHeight;
+    if(cssW === 0 || cssH === 0) return;
+    canvas.width = cssW * dpr;
+    canvas.height = cssH * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const off = document.createElement('canvas');
+    off.width = cssW; off.height = cssH;
+    const octx = off.getContext('2d');
+    const quoteLines = ['You shine', 'without trying.'];
+    octx.textAlign = 'center';
+    octx.textBaseline = 'middle';
+
+    function setFont(size){ octx.font = `italic 700 ${size}px "Playfair Display", serif`; }
+
+    let fontSize = Math.min(cssH / (quoteLines.length * 1.35), 96);
+    setFont(fontSize);
+    const maxTextWidth = cssW * 0.92;
+    const widest = Math.max(...quoteLines.map(l => octx.measureText(l).width));
+    if(widest > maxTextWidth){
+      fontSize = fontSize * (maxTextWidth / widest);
+      setFont(fontSize);
+    }
+
+    octx.fillStyle = '#fff';
+    const lineHeight = fontSize * 1.2;
+    const totalHeight = lineHeight * (quoteLines.length - 1);
+    const startY = cssH/2 - totalHeight/2 + fontSize*0.04;
+    quoteLines.forEach((line, i) => {
+      octx.fillText(line, cssW/2, startY + i*lineHeight);
+    });
+    const data = octx.getImageData(0, 0, cssW, cssH).data;
+
+    const points = [];
+    const step = cssW < 420 ? 2 : 1;
+    for(let y = 0; y < cssH; y += step){
+      for(let x = 0; x < cssW; x += step){
+        const idx = (y*cssW + x)*4 + 3;
+        if(data[idx] > 90) points.push({x, y});
+      }
+    }
+    for(let i = points.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [points[i], points[j]] = [points[j], points[i]];
+    }
+    const maxStars = cssW < 420 ? 950 : 1700;
+    const stars = points.slice(0, maxStars).map(p => ({
+      tx: p.x, ty: p.y,
+      x: cssW/2 + (Math.random()-0.5) * cssW * 1.6,
+      y: cssH/2 + (Math.random()-0.5) * cssH * 1.6,
+      delay: reduceMotion ? 0 : Math.random()*1100,
+      r: Math.random()*1.3 + 0.7,
+      phase: Math.random()*Math.PI*2
+    }));
+
+    let startTime = null;
+    let settled = false;
+
+    function drawStar(ctx, x, y, r, alpha){
+      ctx.beginPath();
+      ctx.fillStyle = `rgba(237,231,246,${alpha})`;
+      ctx.shadowColor = 'rgba(179,136,255,0.95)';
+      ctx.shadowBlur = 7;
+      ctx.arc(x, y, r, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    function assembleFrame(ts){
+      if(startTime === null) startTime = ts;
+      const elapsed = ts - startTime;
+      ctx.clearRect(0, 0, cssW, cssH);
+      let allDone = true;
+
+      stars.forEach(s => {
+        if(elapsed < s.delay){ allDone = false; return; }
+        const localT = Math.min((elapsed - s.delay) / 900, 1);
+        if(localT < 1) allDone = false;
+        const ease = 1 - Math.pow(1 - localT, 3);
+        const cx = s.x + (s.tx - s.x) * ease;
+        const cy = s.y + (s.ty - s.y) * ease;
+        const twinkle = 0.75 + 0.25 * Math.sin(ts/450 + s.phase);
+        drawStar(ctx, cx, cy, s.r, (0.4 + 0.6*localT) * twinkle);
+      });
+
+      if(!allDone){
+        requestAnimationFrame(assembleFrame);
+      } else {
+        settled = true;
+        requestAnimationFrame(twinkleFrame);
+      }
+    }
+
+    function twinkleFrame(ts){
+      ctx.clearRect(0, 0, cssW, cssH);
+      stars.forEach(s => {
+        const twinkle = 0.65 + 0.35 * Math.sin(ts/500 + s.phase);
+        drawStar(ctx, s.tx, s.ty, s.r, twinkle);
+      });
+      requestAnimationFrame(twinkleFrame);
+    }
+
+    if(reduceMotion){
+      requestAnimationFrame(twinkleFrame);
+    } else {
+      requestAnimationFrame(assembleFrame);
+    }
+  }
+
+  window.addEventListener('load', initNameCanvas);
+  let nameResizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(nameResizeTimer);
+    nameResizeTimer = setTimeout(initNameCanvas, 300);
+  });
+
+  /* ===================== SCROLL REVEAL ===================== */
+  const revealEls = document.querySelectorAll('.reveal');
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting){
+        entry.target.classList.add('in-view');
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  revealEls.forEach(el => revealObserver.observe(el));
+
+  /* ===================== CONSTELLATION DRAW + INTERACTION ===================== */
+  const constLines = document.querySelectorAll('.const-line');
+  const constWrap = document.querySelector('.const-wrap');
+  if(constWrap){
+    const constObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if(entry.isIntersecting){
+          constLines.forEach((line, i) => {
+            setTimeout(() => line.classList.add('drawn'), i * 280);
+          });
+          constObserver.disconnect();
+        }
+      });
+    }, { threshold: 0.3 });
+    constObserver.observe(constWrap);
+  }
+
+  const starNodes = document.querySelectorAll('.star-node');
+  const memoryCards = document.querySelectorAll('.memory-card');
+
+  function setActive(index, active){
+    document.querySelector(`.star-node[data-index="${index}"]`)?.classList.toggle('active', active);
+    document.querySelector(`.memory-card[data-index="${index}"]`)?.classList.toggle('active', active);
+    constLines.forEach(line => {
+      const [a, b] = line.dataset.pair.split('-');
+      if((a === String(index) || b === String(index))) line.classList.toggle('active', active);
+    });
+  }
+
+  starNodes.forEach(node => {
+    const idx = node.dataset.index;
+    node.addEventListener('mouseenter', () => setActive(idx, true));
+    node.addEventListener('mouseleave', () => setActive(idx, false));
+    node.addEventListener('focus', () => setActive(idx, true));
+    node.addEventListener('blur', () => setActive(idx, false));
+  });
+
+  memoryCards.forEach(card => {
+    const idx = card.dataset.index;
+    card.addEventListener('mouseenter', () => setActive(idx, true));
+    card.addEventListener('mouseleave', () => setActive(idx, false));
+  });
+
+  /* ===================== SIDE NAV SCROLLSPY ===================== */
+  const navLinks = document.querySelectorAll('.side-nav a');
+  const sections = ['moon','nebula','constellation','wishes','universe'].map(id => document.getElementById(id));
+  const navObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      const link = document.querySelector(`.side-nav a[data-section="${entry.target.id}"]`);
+      if(entry.isIntersecting && link){
+        navLinks.forEach(l => l.classList.remove('active'));
+        link.classList.add('active');
+      }
+    });
+  }, { threshold: 0.4 });
+  sections.forEach(sec => { if(sec) navObserver.observe(sec); });
+
+})();
+</script>
+</body>
+</html>
